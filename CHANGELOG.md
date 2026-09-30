@@ -1,3 +1,7 @@
+## 13.3.3
+
+* iOS: `hasPermissions` returns `false` for READ types never requested, instead of `null` - PR [#527](https://github.com/carp-dk/carp-health-flutter/pull/527)
+
 ## 13.3.2
 
 * Write data now returns UUID of records - PR [#448](https://github.com/carp-dk/carp-health-flutter/pull/448)
