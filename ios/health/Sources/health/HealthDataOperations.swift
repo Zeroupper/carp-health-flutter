@@ -57,6 +57,8 @@ class HealthDataOperations {
             }
         }
 
+        // Read access is never disclosed on iOS (nil), but iOS does tell whether it was asked.
+        var undisclosed = Set<HKObjectType>()
         for (index, type) in types.enumerated() {
             guard let sampleType = dataTypesDict[type] else {
                 print("Warning: Health data type '\(type)' not found in dataTypesDict")
@@ -64,23 +66,33 @@ class HealthDataOperations {
                 return
             }
 
-            let success = hasPermission(type: sampleType, access: permissions[index])
-            if success == nil || success == false {
-                result(success)
-                return
-            }
+            var objectTypes: [HKObjectType] = [sampleType]
             if let characteristicType = characteristicsTypesDict[type] {
-                let characteristicSuccess = hasPermission(
-                    type: characteristicType, access: permissions[index]
-                )
-                if characteristicSuccess == nil || characteristicSuccess == false {
-                    result(characteristicSuccess)
+                objectTypes.append(characteristicType)
+            }
+            for objectType in objectTypes {
+                switch hasPermission(type: objectType, access: permissions[index]) {
+                case false?:
+                    result(false)
                     return
+                case nil:
+                    undisclosed.insert(objectType)
+                default:
+                    break
                 }
             }
         }
 
-        result(true)
+        if undisclosed.isEmpty {
+            result(true)
+            return
+        }
+        // Never asked means not granted - false; asked means unknown - nil.
+        healthStore.getRequestStatusForAuthorization(toShare: [], read: undisclosed) { status, _ in
+            DispatchQueue.main.async {
+                result(status == .shouldRequest ? false : nil)
+            }
+        }
     }
 
     /// Check if we have permission for a specific type

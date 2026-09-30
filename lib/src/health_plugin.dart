@@ -105,8 +105,8 @@ class Health {
   /// Caveat:
   ///
   ///  * As Apple HealthKit will not disclose if READ access has been granted for a data type due to privacy concern,
-  ///   this method can only return null to represent an undetermined status, if it is called on iOS
-  ///   with a READ or READ_WRITE access.
+  ///   this method returns null on iOS with a READ or READ_WRITE access once access has been requested,
+  ///   and false if it has never been requested.
   ///
   ///  * On Android, this function returns true or false, depending on whether the specified access right has been granted.
   Future<bool?> hasPermissions(List<HealthDataType> types, {List<HealthDataAccess>? permissions}) async {
